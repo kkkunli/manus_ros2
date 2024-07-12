@@ -1,6 +1,11 @@
 # manus_ros2
 ROS 2 Node for Publishing Manus VR Glove Messages to ROS 2
 
+## Usage
+- Start Manus Core on windows machine or VM
+- `docker build . -t manus_ros2`
+- `./run.sh` (modify router address if necessary; the `--dns` option is required for the Manus SDK to connect correctly)
+
 ## Background and Objectives
 This package is intended to be a simple ROS 2 Node that is able to read data from MANUS VR Gloves and the MANUS SDK and to publish the data as ROS messages for use as a robot controller. It is largely based on the SDK_MinimalClient_Linux project provided by MANUS.
 
@@ -20,9 +25,9 @@ On the DexHand project, we primarily use ROS 2 Humble as this is a LTS release o
 Michael Heilemann originally developed the code for this node, and Trent Shumay has contributed to it's distribution.
 
 ## Dependency on the MANUS SDK
-Note that this project does not include the MANUS SDK itself - you must download this yourself with a developer account from https://www.manus-meta.com/resources/downloads. We are not affiliated with MANUS directly, nor do we publish or maintain the official SDK. 
+Note that this project does not include the MANUS SDK itself - you must download this yourself with a developer account from https://www.manus-meta.com/resources/downloads. We are not affiliated with MANUS directly, nor do we publish or maintain the official SDK.
 
-Extract the ZIP into the /ext folder of this source tree. 
+Extract the ZIP into the /ext folder of this source tree.
 
 Properly installed, the MANUS SDK should be in:
 
@@ -43,7 +48,6 @@ These messages are as follows:
 - `manus_left`: A ROS 2 PoseArray message containing positions and rotations for the left hand
 - `manus_right`: A ROS 2 PoseArray message containing positions and rotations for the right hand
 
-This data is provided verbatim in exactly the same order and format as received from the Manus client with no additional transforms or logic. If needed, you can modify your own fork of this node to do that, but we'd actually recommend just doing it in the subscriber to these messages so that you are not convoluting the data being reported from the Manus SDK. 
+This data is provided verbatim in exactly the same order and format as received from the Manus client with no additional transforms or logic. If needed, you can modify your own fork of this node to do that, but we'd actually recommend just doing it in the subscriber to these messages so that you are not convoluting the data being reported from the Manus SDK.
 
 Currently, the node is on a 50hz timer, but you can experiment with increasing or decreasing this as needed.
-
