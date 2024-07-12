@@ -1,0 +1,59 @@
+Welcome to the most least-likely-to-be-read file in this SDK.
+but its important if you want to use the SDK.
+
+when you unpack the SDKClient zip you will also find:
+- ManusSDK			(directory)
+	- ManusSDK.Lib  
+		the main SDK lib you will need to talk with Manus Core
+	- ManusSDK.dll
+		the main SDK dll you will need to talk with Manus Core
+- ManusSdkTypes.h
+	this contains all the specific types and enumerators used in the SDK.
+- ManusSdkTypeInitializers.h
+	this contains all the initializers for the structs used in the SDK.
+- ManusSDK.h
+	The interface header for the SDK DLL. this describes all the functions available to the user.
+- SDKMinimalClient.cpp
+	This contains all the logic and basic examples to use the SDK. It is only meant as an example on how to work with the
+	SDK DLL and not as a template how your own client implementation should look. This is about as minimal as you can get to just get the data of a left hand glove.
+- SDKMinimalClient.hpp
+	Header file
+- SDKMinimalClient.vcxproj
+	project file
+- packages.config
+	This is a third party nuget package reference for logging purposes and is used by the SDKClient.
+	if this is not installed on your system use nuget to restore the spdlog_native 2021.7.30 package. 
+	However Visual studio usually automatically restores the nuget package when you build the solution.
+	
+This project will build with visual studio 2019 and 2022 on windows 10/11
+
+Important project settings
+	- c++
+		- language
+			- C++ language standard
+				for backwards compatibility the SDK is compiled on the ISO C++ 17 standard.
+			- Precompiled headers
+				Not using Precompiled Headers
+	- linker
+		- Additional Library Directories
+			$(ProjectDir)ManusSDK
+				this is for the ManusSDK.dll/lib files
+		- Input
+			- Additional Dependencies
+				ManusSDK.lib
+		- System
+			- SubSystem
+				Console
+				the SDKMinimalClient example outputs to the console, but your client may differ. adjust as is needed for your client.
+				
+The default SDKMinimalClient.vcxproj already has the above settings in both Debug and Release mode and should compile and run out of the box.
+
+To run succesfully also run Manus Tray or console version and preferably with a dongle and glove connected to the same PC.
+
+When running the client you can run it 
+	-	local	
+		it will search the localhost for a manus instance to connect to.
+			
+	Once running and connected it will show some of the available data as reported by the Manus Host.
+	
+For more details on how the interactions are done with the SDK look in the SDKMinimalClient.cpp .

@@ -41,7 +41,7 @@ include_directories(
 )
 
 
-add_executable(manus_ros2 
+add_executable(manus_ros2
   src/SDKMinimalClient.cpp
   src/manus_ros2.cpp
   )

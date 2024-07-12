@@ -1,0 +1,131 @@
+#pragma once
+/*! \mainpage Manus Core SDK Documentation
+*
+* \section intro_sec Introduction
+*
+Welcome to the documentation for the Manus Core C++ SDK! We've designed it to allow you to get data off the Manus Gloves and Skeletons as quickly and easily as possible.
+A few things to note:
+	- This documentation is geared specifically towards the C++ SDK - other documentation can be found here: <a href="https://documentation.manus-vr.com/v2.3.0/unity-plugin/index.html">Manus Unity Plugin</a> and <a href="https://documentation.manus-vr.com/v2.3.0/unreal/index.html">Manus Unreal Plugin</a>
+	- Manus Core SDK contains two main projects: the %SDKClient and the recently added %SDKMinimalClient. The %SDKMinimalClient
+	  is an easier and simplified version of the %SDKClient, it contains only the basic commands on how to connect to Manus Core and create a simple left hand skeleton.
+	- When in doubt, reference the test implementations. This should be enough to get you through most problems.
+
+Good luck!
+
+\section folder_layout_sec Folder Layout
+In our Windows file explorer you will find:
+
+- %SDKClient			(directory)
+	- docs				(directory): 
+		this contains all the doxygen generated documentation of the SDK
+	- ManusSDK				(directory): 
+		- ManusSDK.Lib  
+			the main SDK lib you will need to talk with Manus Core
+		- ManusSDK.dll
+			the main SDK dll you will need to talk with Manus Core
+	- PlatformSpecific				(directory):
+		- 	PlatformSpecific/ClientPlatformSpecific.hpp
+			this contains everything to make the client as platform independent as possible.
+		- Windows				(directory)
+			-	ClientPlatformSpecific.cpp
+			-	ClientPlatformSpecificTypes.hpp
+	- Main.cpp
+		this contains the main function that starts this example sdk client.
+	- SDKClient/ManusSDK.h
+		the interface header for the SDK DLL. This describes all the functions available to the user.
+	- SDKClient/ManusSDKTypeInitializers.h
+		this contains all the initializers for the structs used in the SDK.
+	- SDKClient/ManusSDKTypes.h
+		this contains all the specific types and enumerators used in the SDK.
+	- SDKClient.cpp
+		This contains all the logic and basic examples to use the SDK. It is only meant as an example on how to work with the
+		SDK DLL and not as a template how your own client implementation should look.
+	- SDKClient.hpp
+		Header file
+	- SDKClient.vcxproj
+		project file
+	- packages.config
+		This is a third party nuget package reference for logging purposes and is used by the %SDKClient.
+		If this is not installed on your system use nuget to restore the spdlog_native 2021.7.30 package.
+		However Visual studio usually automatically restores the nuget package when you build the solution.
+- %SDKMinimalClient			(directory)
+	- ManusSDK				(directory): 
+		- ManusSDK.Lib  
+			the main SDK lib you will need to talk with Manus Core
+		- ManusSDK.dll
+			the main SDK dll you will need to talk with Manus Core
+	- SDKMinimalClient/ManusSDK.h
+		the interface header for the SDK DLL. This describes all the functions available to the user.
+	- SDKMinimalClient/ManusSDKTypeInitializers.h
+		this contains all the initializers for the structs used in the SDK.
+	- SDKMinimalClient/ManusSDKTypes.h
+		this contains all the specific types and enumerators used in the SDK.
+	- SDKMinimalClient/SDKMinimalClient.cpp
+		This contains all the logic and basic examples to use the SDK. It is only meant as an example on how to work with the
+		SDK DLL and not as a template how your own client implementation should look. This is about as minimal as you can get to just get the data of a left hand glove.
+	- SDKMinimalClient.hpp
+		Header file
+	- SDKMinimalClient.vcxproj
+		project file
+	- packages.config
+		This is a third party nuget package reference for logging purposes and is used by the %SDKMinimalClient.
+		if this is not installed on your system use nuget to restore the spdlog_native 2021.7.30 package.
+		However Visual studio usually automatically restores the nuget package when you build the solution.
+
+\section building_sec Building 
+This project will build with visual studio 2019 and 2022 on windows 10/11
+
+Use the SDK.sln Visual Studio solution to build.
+In your version of Visual Studio, click Build > Build Solution.
+
+
+\section important_project_settings Important Project Settings
+
+- c++
+	- Language
+		- C++ language standard:
+			for backwards compatibility the SDK is compiled on the ISO C++ 17 standard.
+		- Precompiled headers:
+			Not using Precompiled Headers
+- linker
+	- Additional Library Directories:
+		$(ProjectDir)ManusSDK
+			 this is for the ManusSDK.dll/lib files
+	- Input:
+		- Additional Dependencies:
+			ManusSDK.lib
+	- System:
+		- SubSystem:
+			Console
+			the %SDKClient example outputs to the console, but your client may differ. adjust as is needed for your client.
+
+The default SDKClient.vcxproj already has the above settings in both Debug and Release mode and should compile and run out of the box.
+
+\section running_sec Running
+	- Start ManusCore_Console.exe (because it shows debug output) or ManusCore.exe (the tray application without debug output). Default it is located in C:\Program Files\ManusQuantum\ManusCore.
+	- Open Manus Dashboard in ManusCore\Manus_Dashboard\Manus_Dashboard.exe
+	- Connect your dongle, turn on your gloves, make sure they show up in the Manus Dashboard and everything looks ok.
+
+You can run the SDK:
+- local:
+	it will search the localhost for a manus instance to connect to.
+
+	Only for the SDK Client and not for the SDK Minimal Client:
+- host:
+	it will search for manus instances on the network
+	then give the user the option to select a host
+	and then connect to that host.
+	Note network security software may interfere with this. Make sure the network allows manus to be run.	
+- grpcpreset:
+	in certain cases its better to direct the SDK client to the host more directly.
+	it will not search the network and just directly connect to a host on the address and port.
+	the GRPC preset is stored in the manus core settings file ManusCore.Coordinator.json which can be 
+	found in the windows appdata directory %appdata%/../local/Manus/ManusCore
+
+For more details on how the interactions are done with the SDK look in the SDKClient.cpp and the SDKMinimalClient.cpp.
+
+\section support_sec Support
+
+If you have questions please get in touch with us at support@manus-meta.com.
+*/#pragma once
+#pragma once

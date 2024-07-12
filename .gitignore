@@ -32,7 +32,7 @@
 *.app
 
 # External SDKs
-ext/MANUS_Core*
+ext/MANUS_Core
 
 # ROS2 Build Files
 build
