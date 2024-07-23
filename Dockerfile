@@ -40,16 +40,17 @@ RUN echo "-- installing grpc" && \
 
 # Initialize rosdep
 RUN rosdep update
+RUN apt-get update && apt-get install libfmt-dev && rm -rf /var/lib/apt/lists/*
 
 # Create a workspace
 RUN mkdir -p /root/ros2_ws/src
 WORKDIR /root/ros2_ws
 
+# Add a build argument to force rebuilds
+ARG CACHEBUST=1
+
 # Copy the package source code to the workspace
 COPY . /root/ros2_ws/src/manus_ros2
-
-# Install dependencies
-RUN apt-get update && apt-get install libfmt-dev && rm -rf /var/lib/apt/lists/*
 
 # Build the package
 RUN . /opt/ros/foxy/setup.sh && colcon build
