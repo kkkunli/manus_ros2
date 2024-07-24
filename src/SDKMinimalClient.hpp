@@ -51,7 +51,21 @@ public:
 	std::vector<ClientSkeleton> skeletons;
 };
 
-class SDKMinimalClient 
+/// @brief Used to store ergonomics information received from Core.
+class ClientErgonomics
+{
+public:
+	ErgonomicsData* data_left = nullptr;
+	ErgonomicsData* data_right = nullptr;
+
+	~ClientErgonomics()
+	{
+		if (data_left != nullptr)delete data_left;
+		if (data_right != nullptr)delete data_right;
+	}
+};
+
+class SDKMinimalClient
 {
 public:
 	SDKMinimalClient(std::shared_ptr<rclcpp::Node> publisherNode);
@@ -70,6 +84,13 @@ public:
 
 	bool HasNewSkeletonData() { return m_HasNewSkeletonData; }
 	ClientSkeletonCollection* CurrentSkeletons() { return m_Skeleton; }
+
+	static void OnLandscapeCallback(const Landscape* const p_Landscape);
+
+	static void OnErgonomicsStreamCallback(const ErgonomicsStream* const p_ErgonomicsStream);
+
+	bool HasNewErgonomicsData() { return m_HasNewErognomicsData; }
+	ClientErgonomics* CurrentErgonomics() { return m_Ergonomics; }
 
 	uint32_t GetRightHandID() { return m_GloveIDs[0]; }
 	uint32_t GetLeftHandID() { return m_GloveIDs[1]; }
@@ -96,6 +117,12 @@ protected:
 	ClientSkeletonCollection* m_NextSkeleton = nullptr;
 	ClientSkeletonCollection* m_Skeleton = nullptr;
 
+	std::mutex m_ErgonomicsMutex;
+
+	bool m_HasNewErognomicsData = false;
+	ClientErgonomics* m_NextErgonomics = nullptr;
+	ClientErgonomics* m_Ergonomics = nullptr;
+
 	std::mutex m_LandscapeMutex;
 	Landscape* m_NewLandscape = nullptr;
 	Landscape* m_Landscape = nullptr;
@@ -104,8 +131,11 @@ protected:
 
 	uint32_t m_GloveIDs[2] = { 0, 0 }; // ID's for Right ()
 
+	// Notice that m_First[Left|Reight]GloveID are different from m_GloveIDs above: they are read from landscape data and are needed for mapping ergonomics data to the correct glove.
+	uint32_t m_FirstLeftGloveID = 0;
+	uint32_t m_FirstRightGloveID = 0;
+
 	uint32_t m_FrameCounter = 0;
 
 	std::shared_ptr<rclcpp::Node> m_PublisherNode;
 };
-
