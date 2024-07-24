@@ -27,7 +27,7 @@ SDKMinimalClient::~SDKMinimalClient()
 /// This function attempts to resize the console window and then proceeds to initialize the SDK's interface.
 ClientReturnCode SDKMinimalClient::Initialize()
 {
-	
+
 	/*if (!PlatformSpecificInitialization())
 	{
 		return ClientReturnCode::ClientReturnCode_FailedPlatformSpecificInitialization;
@@ -123,6 +123,20 @@ ClientReturnCode SDKMinimalClient::RegisterAllCallbacks()
 		return ClientReturnCode::ClientReturnCode_FailedToInitialize;
 	}
 
+	const SDKReturnCode t_RegisterErgonomicsCallbackResult = CoreSdk_RegisterCallbackForErgonomicsStream(*OnErgonomicsStreamCallback);
+	if (t_RegisterErgonomicsCallbackResult != SDKReturnCode::SDKReturnCode_Success)
+	{
+		RCLCPP_ERROR(m_PublisherNode->get_logger(), "Failed to register the ergonomics callback");
+		return ClientReturnCode::ClientReturnCode_FailedToInitialize;
+	}
+
+	const SDKReturnCode t_RegisterLandscapeCallbackResult = CoreSdk_RegisterCallbackForLandscapeStream(*OnLandscapeCallback);
+	if (t_RegisterLandscapeCallbackResult != SDKReturnCode::SDKReturnCode_Success)
+	{
+		RCLCPP_ERROR(m_PublisherNode->get_logger(), "Failed to register the landscape callback");
+		return ClientReturnCode::ClientReturnCode_FailedToInitialize;
+	}
+
 	return ClientReturnCode::ClientReturnCode_Success;
 }
 
@@ -149,6 +163,7 @@ void SDKMinimalClient::ConnectToHost()
 bool SDKMinimalClient::Run()
 {
 	m_HasNewSkeletonData = false;
+	m_HasNewErognomicsData = false;
 
 	// Check if there is new data, otherwise, we just wait.
 	m_SkeletonMutex.lock();
@@ -161,9 +176,21 @@ bool SDKMinimalClient::Run()
         m_HasNewSkeletonData = true;
 	}
 	m_SkeletonMutex.unlock();
+
+	m_ErgonomicsMutex.lock();
+	if (m_NextErgonomics != nullptr)
+	{
+		if (m_Ergonomics != nullptr)
+			delete m_Ergonomics;
+		m_Ergonomics = m_NextErgonomics;
+		m_NextErgonomics = nullptr;
+		m_HasNewErognomicsData = true;
+	}
+	m_ErgonomicsMutex.unlock();
+
     m_FrameCounter++;
 
-    return m_HasNewSkeletonData;
+    return m_HasNewSkeletonData || m_HasNewErognomicsData;
 }
 
 
@@ -238,7 +265,7 @@ void SDKMinimalClient::LoadTestSkeleton()
         t_SKL.settings.skeletonTargetUserIndexData.userIndex = 0; // Just take the first index. make sure this matches in the landscape.
 
 		strncpy(t_SKL.name, (hand == 0) ? "RightHand" : "LeftHand", sizeof(t_SKL.name));
-        
+
         SDKReturnCode t_Res = CoreSdk_CreateSkeletonSetup(t_SKL, &t_SklIndex);
         if (t_Res != SDKReturnCode::SDKReturnCode_Success)
         {
@@ -265,7 +292,7 @@ void SDKMinimalClient::LoadTestSkeleton()
 			RCLCPP_ERROR(m_PublisherNode->get_logger(), "Failed to load skeleton");
             return;
         }
-        else 
+        else
         {
 			RCLCPP_INFO_STREAM(m_PublisherNode->get_logger(), "Skeleton ID:" << &m_GloveIDs[hand] << " loaded successfully");
         }
@@ -480,7 +507,7 @@ bool SDKMinimalClient::SetupHandChains(uint32_t p_SklIndex, bool isRightHand)
 		t_Chain.dataIndex = 0;
 		if (i == 0) // Thumb
 		{
-            
+
 			t_Chain.nodeIdCount = 4; // The amount of node id's used in the array
 			t_Chain.nodeIds[0] = 1;	 // this links to the hand node created in the SetupHandNodes
 			t_Chain.nodeIds[1] = 2;	 // this links to the hand node created in the SetupHandNodes
@@ -527,5 +554,83 @@ void SDKMinimalClient::OnSkeletonStreamCallback(const SkeletonStreamInfo *const 
 			delete s_Instance->m_NextSkeleton;
 		s_Instance->m_NextSkeleton = t_NxtClientSkeleton;
 		s_Instance->m_SkeletonMutex.unlock();
+	}
+}
+
+/// @brief This gets called when receiving landscape information from core
+/// @param p_Landscape contains the new landscape from core.
+void SDKMinimalClient::OnLandscapeCallback(const Landscape* const p_Landscape)
+{
+	if (s_Instance == nullptr)return;
+
+	Landscape* t_Landscape = new Landscape(*p_Landscape);
+	s_Instance->m_LandscapeMutex.lock();
+	if (s_Instance->m_NewLandscape != nullptr) delete s_Instance->m_NewLandscape;
+	s_Instance->m_NewLandscape = t_Landscape;
+	s_Instance->m_NewGestureLandscapeData.resize(t_Landscape->gestureCount);
+	CoreSdk_GetGestureLandscapeData(s_Instance->m_NewGestureLandscapeData.data(), (uint32_t)s_Instance->m_NewGestureLandscapeData.size());
+	s_Instance->m_LandscapeMutex.unlock();
+
+	// Update glove IDs according to landscape data
+	for (size_t i = 0; i < t_Landscape->gloveDevices.gloveCount; i++)
+	{
+		if (s_Instance->m_FirstLeftGloveID == 0 && t_Landscape->gloveDevices.gloves[i].side == Side::Side_Left)
+		{
+			s_Instance->m_FirstLeftGloveID = t_Landscape->gloveDevices.gloves[i].id;
+			continue;
+		}
+		if (s_Instance->m_FirstRightGloveID == 0 && t_Landscape->gloveDevices.gloves[i].side == Side::Side_Right)
+		{
+			s_Instance->m_FirstRightGloveID = t_Landscape->gloveDevices.gloves[i].id;
+			continue;
+		}
+	}
+}
+
+/// @brief This gets called when the client receives ergonomics data from manus core
+/// @param p_ErgonomicsStream contains the data received from the core
+void SDKMinimalClient::OnErgonomicsStreamCallback(const ErgonomicsStream *const p_Ergonomics)
+{
+	if (s_Instance)
+	{
+		ClientErgonomics *t_NxtClientErgonomics = new ClientErgonomics();
+		t_NxtClientErgonomics->data_left = new ErgonomicsData;
+		t_NxtClientErgonomics->data_right = new ErgonomicsData;
+		bool updated_left = false;
+		bool updated_right = false;
+		for (uint32_t i = 0; i < p_Ergonomics->dataCount; i++) {
+			if (p_Ergonomics->data[i].isUserID) continue;
+			for (uint32_t j = 0; j < ErgonomicsDataType_MAX_SIZE; j++) {
+				if (p_Ergonomics->data[i].id == s_Instance->m_FirstLeftGloveID) {
+					t_NxtClientErgonomics->data_left->data[j] = p_Ergonomics->data[i].data[j];
+					updated_left = true;
+				}
+				if (p_Ergonomics->data[i].id == s_Instance->m_FirstRightGloveID) {
+					t_NxtClientErgonomics->data_right->data[j] = p_Ergonomics->data[i].data[j];
+					updated_right = true;
+				}
+			}
+		}
+		if (!updated_left) {
+			// Copy the data for right hand from old data
+			if (s_Instance->m_Ergonomics != nullptr) {
+				for (uint32_t j = 0; j < ErgonomicsDataType_MAX_SIZE; j++) {
+					t_NxtClientErgonomics->data_left->data[j] = s_Instance->m_Ergonomics->data_left->data[j];
+				}
+			}
+		}
+		if (!updated_right) {
+			// Copy the data for left hand from old data
+			if (s_Instance->m_Ergonomics != nullptr) {
+				for (uint32_t j = 0; j < ErgonomicsDataType_MAX_SIZE; j++) {
+					t_NxtClientErgonomics->data_right->data[j] = s_Instance->m_Ergonomics->data_right->data[j];
+				}
+			}
+		}
+		s_Instance->m_ErgonomicsMutex.lock();
+		if (s_Instance->m_NextErgonomics != nullptr)
+			delete s_Instance->m_NextErgonomics;
+		s_Instance->m_NextErgonomics = t_NxtClientErgonomics;
+		s_Instance->m_ErgonomicsMutex.unlock();
 	}
 }
