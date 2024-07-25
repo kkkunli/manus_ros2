@@ -137,6 +137,13 @@ ClientReturnCode SDKMinimalClient::RegisterAllCallbacks()
 		return ClientReturnCode::ClientReturnCode_FailedToInitialize;
 	}
 
+	const SDKReturnCode t_RegisterTrackerCallbackResult = CoreSdk_RegisterCallbackForTrackerStream(*OnTrackerStreamCallback);
+	if (t_RegisterTrackerCallbackResult != SDKReturnCode::SDKReturnCode_Success)
+	{
+		RCLCPP_ERROR(m_PublisherNode->get_logger(), "Failed to register the Tracker callback");
+		return ClientReturnCode::ClientReturnCode_FailedToInitialize;
+	}
+
 	return ClientReturnCode::ClientReturnCode_Success;
 }
 
@@ -164,6 +171,7 @@ bool SDKMinimalClient::Run()
 {
 	m_HasNewSkeletonData = false;
 	m_HasNewErognomicsData = false;
+	m_HasNewTrackerData = false;
 
 	// Check if there is new data, otherwise, we just wait.
 	m_SkeletonMutex.lock();
@@ -177,6 +185,17 @@ bool SDKMinimalClient::Run()
 	}
 	m_SkeletonMutex.unlock();
 
+	m_TrackerMutex.lock();
+	if (m_NextTrackerData != nullptr)
+	{
+		if (m_TrackerData != nullptr)
+			delete m_TrackerData;
+		m_TrackerData = m_NextTrackerData;
+		m_NextTrackerData = nullptr;
+		m_HasNewTrackerData = true;
+	}
+	m_TrackerMutex.unlock();
+
 	m_ErgonomicsMutex.lock();
 	if (m_NextErgonomics != nullptr)
 	{
@@ -188,9 +207,7 @@ bool SDKMinimalClient::Run()
 	}
 	m_ErgonomicsMutex.unlock();
 
-    m_FrameCounter++;
-
-    return m_HasNewSkeletonData || m_HasNewErognomicsData;
+    return m_HasNewSkeletonData || m_HasNewErognomicsData || m_HasNewTrackerData;
 }
 
 
@@ -632,5 +649,26 @@ void SDKMinimalClient::OnErgonomicsStreamCallback(const ErgonomicsStream *const 
 			delete s_Instance->m_NextErgonomics;
 		s_Instance->m_NextErgonomics = t_NxtClientErgonomics;
 		s_Instance->m_ErgonomicsMutex.unlock();
+	}
+}
+
+/// @brief This gets called when receiving tracker information from core
+/// @param p_TrackerStreamInfo contains the meta data on how much data regarding the trackers we need to get from the SDK.
+void SDKMinimalClient::OnTrackerStreamCallback(const TrackerStreamInfo* const p_TrackerStreamInfo)
+{
+	if (s_Instance)
+	{
+		TrackerDataCollection* t_TrackerData = new TrackerDataCollection();
+
+		t_TrackerData->trackerData.resize(p_TrackerStreamInfo->trackerCount);
+
+		for (uint32_t i = 0; i < p_TrackerStreamInfo->trackerCount; i++)
+		{
+			CoreSdk_GetTrackerData(i, &t_TrackerData->trackerData[i]);
+		}
+		s_Instance->m_TrackerMutex.lock();
+		if (s_Instance->m_NextTrackerData != nullptr) delete s_Instance->m_NextTrackerData;
+		s_Instance->m_NextTrackerData = t_TrackerData;
+		s_Instance->m_TrackerMutex.unlock();
 	}
 }

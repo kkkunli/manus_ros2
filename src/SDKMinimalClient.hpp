@@ -65,7 +65,15 @@ public:
 	}
 };
 
-class SDKMinimalClient
+/// @brief Used to store all the tracker data coming from Core.
+class TrackerDataCollection
+{
+public:
+	std::vector<TrackerData> trackerData;
+};
+
+
+class SDKMinimalClient 
 {
 public:
 	SDKMinimalClient(std::shared_ptr<rclcpp::Node> publisherNode);
@@ -82,6 +90,8 @@ public:
 
 	static void OnSkeletonStreamCallback(const SkeletonStreamInfo* const p_SkeletonStreamInfo);
 
+	static void OnTrackerStreamCallback(const TrackerStreamInfo* const p_TrackerStreamInfo);
+
 	bool HasNewSkeletonData() { return m_HasNewSkeletonData; }
 	ClientSkeletonCollection* CurrentSkeletons() { return m_Skeleton; }
 
@@ -94,6 +104,9 @@ public:
 
 	uint32_t GetRightHandID() { return m_GloveIDs[0]; }
 	uint32_t GetLeftHandID() { return m_GloveIDs[1]; }
+
+	bool HasNewTrackerData() { return m_HasNewTrackerData; }
+	TrackerDataCollection* CurrentTrackerData() { return m_TrackerData; }
 
 	static SDKMinimalClient* GetInstance() { return s_Instance; }
 
@@ -109,7 +122,6 @@ protected:
 	static ManusVec3 CreateManusVec3(float p_X, float p_Y, float p_Z);
 
 	static SDKMinimalClient* s_Instance;
-	bool m_Running = true;
 
 	std::mutex m_SkeletonMutex;
 
@@ -122,6 +134,12 @@ protected:
 	bool m_HasNewErognomicsData = false;
 	ClientErgonomics* m_NextErgonomics = nullptr;
 	ClientErgonomics* m_Ergonomics = nullptr;
+	
+	std::mutex m_TrackerMutex;
+
+	bool m_HasNewTrackerData = false;
+	TrackerDataCollection* m_NextTrackerData = nullptr;
+	TrackerDataCollection* m_TrackerData = nullptr;
 
 	std::mutex m_LandscapeMutex;
 	Landscape* m_NewLandscape = nullptr;
