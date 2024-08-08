@@ -31,8 +31,8 @@ public:
 		manus_left_publisher_ = this->create_publisher<geometry_msgs::msg::PoseArray>("manus_left", 10);
     	manus_right_publisher_ = this->create_publisher<geometry_msgs::msg::PoseArray>("manus_right", 10);
 		manus_ergonomics_publisher = this->create_publisher<sensor_msgs::msg::JointState>("manus_ergonomics", 10);
-		manus_leftTrackerData_publisher_ = this->create_publisher<geometry_msgs::msg::PoseArray>("manus_tracker_left", 10);
-		manus_rightTrackerData_publisher_ = this->create_publisher<geometry_msgs::msg::PoseArray>("manus_tracker_right", 10);
+		manus_leftTrackerData_publisher_ = this->create_publisher<geometry_msgs::msg::Pose>("manus_tracker_left", 10);
+		manus_rightTrackerData_publisher_ = this->create_publisher<geometry_msgs::msg::Pose>("manus_tracker_right", 10);
 	}
 
 	void publish_left(geometry_msgs::msg::PoseArray::SharedPtr pose_array) {
@@ -47,20 +47,20 @@ public:
 		manus_ergonomics_publisher->publish(*ergonomics_data);
 	}
 
-	void publish_leftTrackerData(geometry_msgs::msg::PoseArray::SharedPtr pose_array) {
-    	manus_leftTrackerData_publisher_->publish(*pose_array);
+	void publish_leftTrackerData(geometry_msgs::msg::Pose::SharedPtr pose) {
+    	manus_leftTrackerData_publisher_->publish(*pose);
   	}
 
-	void publish_rightTrackerData(geometry_msgs::msg::PoseArray::SharedPtr pose_array) {
-    	manus_rightTrackerData_publisher_->publish(*pose_array);
+	void publish_rightTrackerData(geometry_msgs::msg::Pose::SharedPtr pose) {
+    	manus_rightTrackerData_publisher_->publish(*pose);
   	}
 
 private:
 	rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr manus_left_publisher_;
   	rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr manus_right_publisher_;
 	rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr manus_ergonomics_publisher;
-	rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr manus_leftTrackerData_publisher_;
-  	rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr manus_rightTrackerData_publisher_;
+	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr manus_leftTrackerData_publisher_;
+  	rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr manus_rightTrackerData_publisher_;
 };
 
 
@@ -233,31 +233,26 @@ void convertTrackerDataToROS(std::shared_ptr<ManusROS2Publisher> publisher)
 	TrackerDataCollection* tdc = SDKMinimalClient::GetInstance()->CurrentTrackerData();
 	if (tdc != nullptr && tdc->trackerData.size() != 0){
     	for (size_t i=0; i < tdc->trackerData.size(); ++i) {
-			// Prepare a new PoseArray message for the data
-			auto pose_array = std::make_shared<geometry_msgs::msg::PoseArray>();
-			pose_array->header.stamp = publisher->now();
+			// Prepare a new Pose message for the data
+            auto pose = std::make_shared<geometry_msgs::msg::Pose>();
 
 			// Set the poses for the message
-			const auto &datas = tdc->trackerData[i];
+			const auto &data = tdc->trackerData[i];
 
-			geometry_msgs::msg::Pose pose;
-			pose.position.x = datas.position.x;
-			pose.position.y = datas.position.y;
-			pose.position.z = datas.position.z;
-			pose.orientation.x = datas.rotation.x;
-			pose.orientation.y = datas.rotation.y;
-			pose.orientation.z = datas.rotation.z;
-			pose.orientation.w = datas.rotation.w;
-			pose_array->poses.push_back(pose);
+			pose->position.x = data.position.x;
+			pose->position.y = data.position.y;
+			pose->position.z = data.position.z;
+			pose->orientation.x = data.rotation.x;
+			pose->orientation.y = data.rotation.y;
+			pose->orientation.z = data.rotation.z;
+			pose->orientation.w = data.rotation.w;
 
 			// Which hand is this?
 			if (tdc->trackerData[i].trackerType == TrackerType_RightHand){
-				pose_array->header.frame_id = "manus_tracker_right";
-				publisher->publish_rightTrackerData(pose_array);
+				publisher->publish_rightTrackerData(pose);
 			}
 			else if (tdc->trackerData[i].trackerType == TrackerType_LeftHand){
-				pose_array->header.frame_id = "manus_tracker_left";
-				publisher->publish_leftTrackerData(pose_array);
+				publisher->publish_leftTrackerData(pose);
 			}
 		}
 	}
