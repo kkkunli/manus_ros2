@@ -12,7 +12,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(fmt REQUIRED)
-
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 # locate the MANUS SDK in the /ext folder
 file(GLOB MANUS_SDK RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "ext/MANUS_Core_*")
@@ -26,11 +26,6 @@ if (NOT MANUS_LINUX_PATH)
   message(FATAL_ERROR "SDKMinimalClient_Linux folder not found. Please download the SDK and install into the /ext folder.")
 endif()
 
-
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-
 # Include directories
 include_directories(
     include
@@ -38,8 +33,8 @@ include_directories(
     ${rclcpp_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}  # Add this line to include the Eigen directory
 )
-
 
 add_executable(manus_ros2
   src/SDKMinimalClient.cpp
@@ -57,7 +52,8 @@ target_link_libraries(manus_ros2
     ${sensor_msgs_LIBRARIES}
     ${geometry_msgs_LIBRARIES}
     fmt
-    ${LIBRARY_FILE} # Link the library
+    ${LIBRARY_FILE}  # Link the library
+    Eigen3::Eigen  # Link the Eigen library
 )
 
 target_include_directories(manus_ros2 PUBLIC
@@ -76,16 +72,8 @@ set_target_properties(manus_ros2 PROPERTIES
     INSTALL_RPATH "$ORIGIN"
 )
 
-
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
