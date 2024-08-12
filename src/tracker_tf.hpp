@@ -24,8 +24,8 @@ Quaterniond tracker_quat_to_human_rotation(const Vector4d& tracker_quat) {
     static Quaterniond R0_INV;
 
     if (!initialized) {
-        SIGNS << -1., 1., 1., -1.;
-        Q0 << 0., sqrt(1. / 2.), 0., sqrt(1. / 2.);   // wxyz
+        SIGNS << 1., 1., -1., -1.;                    // xyzw
+        Q0 << sqrt(1. / 2.), 0., sqrt(1. / 2.), 0.;   // xyzw
         R0_INV = Quaterniond(SIGNS.asDiagonal() * Q0).inverse();
         initialized = true;
     }

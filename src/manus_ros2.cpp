@@ -53,7 +53,7 @@ public:
 
 		// Extract position and quaternion from Pose message
 		Vector3d position(pose->position.x, pose->position.y, pose->position.z);
-		Vector4d quaternion(pose->orientation.w, pose->orientation.x, pose->orientation.y, pose->orientation.z);
+		Vector4d quaternion(pose->orientation.x, pose->orientation.y, pose->orientation.z, pose->orientation.w);
 
 		// Transform position and quaternion
 		Vector3d transformed_position = tracker_xyz_to_human_xyz(position);
