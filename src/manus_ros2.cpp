@@ -13,6 +13,7 @@
 #include "geometry_msgs/msg/pose_array.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
 #include "SDKMinimalClient.hpp"
+#include "tracker_tf.hpp"
 #include <fstream>
 #include <iostream>
 #include <thread>
@@ -47,11 +48,34 @@ public:
 		manus_ergonomics_publisher->publish(*ergonomics_data);
 	}
 
+	void process_pose(const geometry_msgs::msg::Pose::SharedPtr pose) {
+		// Convert the pose to human frame
+
+		// Extract position and quaternion from Pose message
+		Vector3d position(pose->position.x, pose->position.y, pose->position.z);
+		Vector4d quaternion(pose->orientation.w, pose->orientation.x, pose->orientation.y, pose->orientation.z);
+
+		// Transform position and quaternion
+		Vector3d transformed_position = tracker_xyz_to_human_xyz(position);
+		Quaterniond transformed_quaternion = tracker_quat_to_human_rotation(quaternion);
+
+		// Assign the transformed values back to the pose
+		pose->position.x = transformed_position.x();
+		pose->position.y = transformed_position.y();
+		pose->position.z = transformed_position.z();
+		pose->orientation.w = transformed_quaternion.w();
+		pose->orientation.x = transformed_quaternion.x();
+		pose->orientation.y = transformed_quaternion.y();
+		pose->orientation.z = transformed_quaternion.z();
+	}
+
 	void publish_leftTrackerData(geometry_msgs::msg::Pose::SharedPtr pose) {
+		process_pose(pose);
     	manus_leftTrackerData_publisher_->publish(*pose);
   	}
 
 	void publish_rightTrackerData(geometry_msgs::msg::Pose::SharedPtr pose) {
+		process_pose(pose);
     	manus_rightTrackerData_publisher_->publish(*pose);
   	}
 
@@ -259,7 +283,7 @@ void convertTrackerDataToROS(std::shared_ptr<ManusROS2Publisher> publisher)
 }
 
 // Main function - Initializes the minimal client and starts the ROS2 node
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
 	rclcpp::init(argc, argv);
 

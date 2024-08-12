@@ -10,8 +10,6 @@ RUN apt-get update && apt-get install -y \
     python3-rosdep \
     python3-vcstool \
     # Required to install GRPC
-    build-essential \
-    git \
     libtool \
     libzmq3-dev \
     # Only required for building the SDK
@@ -21,6 +19,10 @@ RUN apt-get update && apt-get install -y \
     libncurses5-dev \
     # Only required for visual studio debugging
     gdb \
+    # Install Eigen library
+    libeigen3-dev \
+    # Install libfmt required by the project
+    libfmt-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV GRPC_RELEASE_TAG="v1.28.1"
@@ -37,10 +39,6 @@ RUN echo "-- installing protobuf" && \
 RUN echo "-- installing grpc" && \
     cd /var/local/git/grpc && \
     make -j$(nproc) && make install && make clean && ldconfig
-
-# Initialize rosdep
-RUN rosdep update
-RUN apt-get update && apt-get install libfmt-dev && rm -rf /var/lib/apt/lists/*
 
 # Create a workspace
 RUN mkdir -p /root/ros2_ws/src
