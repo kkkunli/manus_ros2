@@ -1,7 +1,25 @@
 #!/bin/bash
 
-# docker run --rm --net=host --ipc=host --pid=host --dns 192.168.1.1 -m 5g --name manus_ros2 -it manus_ros2
+CONTAINER_NAME="manus_ros2"
 
-docker stop manus_ros2
-docker rm manus_ros2
-docker run --net=host --ipc=host --pid=host --dns 192.168.1.1 --name manus_ros2 --restart unless-stopped -it manus_ros2 
+# Function to clean up the container when the script exits
+cleanup() {
+    echo "Cleaning up..."
+    docker stop $CONTAINER_NAME > /dev/null 2>&1
+    docker rm $CONTAINER_NAME > /dev/null 2>&1
+    exit 0
+}
+
+# Set the trap to catch exit signals and run the cleanup function
+trap cleanup SIGINT SIGTERM
+
+# Loop to keep the container running
+while true; do
+    echo "Starting the container..."
+    docker run -d --rm --net=host --ipc=host --pid=host --dns 192.168.1.1 --name $CONTAINER_NAME manus_ros2
+
+    echo "Attaching to the container..."
+    docker attach $CONTAINER_NAME
+
+    echo "Container exited. Restarting..."
+done
