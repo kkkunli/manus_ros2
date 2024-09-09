@@ -16,7 +16,7 @@ trap cleanup SIGINT SIGTERM
 # Loop to keep the container running
 while true; do
     echo "Starting the container..."
-    docker run -d --rm --net=host --ipc=host --pid=host --dns 192.168.1.1 --name $CONTAINER_NAME manus_ros2
+    docker run -d --rm --net=host --ipc=host --pid=host --dns 192.168.3.1 --name $CONTAINER_NAME manus_ros2
 
     echo "Attaching to the container..."
     docker attach $CONTAINER_NAME
