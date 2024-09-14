@@ -374,7 +374,7 @@ bool SDKMinimalClient::SetupHandNodes(uint32_t p_SklIndex, bool isRightHand)
 		CreateManusVec3(0.028739f, 0.000000f, 0.000000f), // Thumb IP joint
 		CreateManusVec3(0.028739f, 0.000000f, 0.000000f), // Thumb Tip joint
 
-		CreateManusVec3(0.052904f, -0.011181f, 0.000000f), // Index MCP joint
+		CreateManusVec3(0.052904f, 0.011181f, 0.000000f), // Index MCP joint
 		CreateManusVec3(0.038257f, 0.000000f, 0.000000f),  // Index PIP joint
 		CreateManusVec3(0.020884f, 0.000000f, 0.000000f),  // Index DIP joint
 		CreateManusVec3(0.018759f, 0.000000f, 0.000000f),  // Index Tip joint
