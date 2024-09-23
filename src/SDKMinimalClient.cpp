@@ -368,11 +368,13 @@ bool SDKMinimalClient::SetupHandNodes(uint32_t p_SklIndex, bool isRightHand)
 	const uint32_t t_NumJoints = 4;
 
 	// Create an array with the initial position of each hand node.
+
+    const float scale_thumb = 1.0;
 	ManusVec3 t_Fingers_Right[t_NumFingers * t_NumJoints] = {
 		CreateManusVec3(0.025320f, 0.024950f, 0.000000f), // Thumb CMC joint
-		CreateManusVec3(0.032742f, 0.000000f, 0.000000f), // Thumb MCP joint
-		CreateManusVec3(0.028739f, 0.000000f, 0.000000f), // Thumb IP joint
-		CreateManusVec3(0.028739f, 0.000000f, 0.000000f), // Thumb Tip joint
+		CreateManusVec3(0.032742f*scale_thumb, 0.000000f, 0.000000f), // Thumb MCP joint
+		CreateManusVec3(0.028739f*scale_thumb, 0.000000f, 0.000000f), // Thumb IP joint
+		CreateManusVec3(0.028739f*scale_thumb, 0.000000f, 0.000000f), // Thumb Tip joint
 
 		CreateManusVec3(0.052904f, 0.011181f, 0.000000f), // Index MCP joint
 		CreateManusVec3(0.038257f, 0.000000f, 0.000000f),  // Index PIP joint
