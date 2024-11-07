@@ -48,7 +48,7 @@ public:
 		manus_ergonomics_publisher->publish(*ergonomics_data);
 	}
 
-	void process_pose(const geometry_msgs::msg::Pose::SharedPtr pose) {
+	void process_pose(const geometry_msgs::msg::Pose::SharedPtr pose, bool is_right_hand) {
 		// Convert the pose to human frame
 
 		// Extract position and quaternion from Pose message
@@ -57,7 +57,7 @@ public:
 
 		// Transform position and quaternion
 		Vector3d transformed_position = tracker_xyz_to_human_xyz(position);
-		Quaterniond transformed_quaternion = tracker_quat_to_human_rotation(quaternion);
+		Quaterniond transformed_quaternion = tracker_quat_to_human_rotation(quaternion, is_right_hand);
 
 		// Assign the transformed values back to the pose
 		pose->position.x = transformed_position.x();
@@ -70,12 +70,12 @@ public:
 	}
 
 	void publish_leftTrackerData(geometry_msgs::msg::Pose::SharedPtr pose) {
-		process_pose(pose);
+		process_pose(pose, false);
     	manus_leftTrackerData_publisher_->publish(*pose);
   	}
 
 	void publish_rightTrackerData(geometry_msgs::msg::Pose::SharedPtr pose) {
-		process_pose(pose);
+		process_pose(pose, true);
     	manus_rightTrackerData_publisher_->publish(*pose);
   	}
 
