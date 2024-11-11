@@ -5,6 +5,7 @@ ROS 2 Node for Publishing Manus VR Glove Messages to ROS 2
 - Start Manus Core on windows machine or VM
 - `sudo ./build.sh`
 - `sudo ./run.sh` (modify router address if necessary; the `--dns` option is required for the Manus SDK to connect correctly)
+- replace libManusSDK.so
 
 ## Background and Objectives
 This package is intended to be a simple ROS 2 Node that is able to read data from MANUS VR Gloves and the MANUS SDK and to publish the data as ROS messages for use as a robot controller. It is largely based on the SDK_MinimalClient_Linux project provided by MANUS.
