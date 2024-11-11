@@ -34,7 +34,7 @@ Quaterniond tracker_quat_to_human_rotation(const Vector4d& tracker_quat, bool is
     Quaterniond rot = Quaterniond(SIGNS.asDiagonal() * tracker_quat) * R0_INV;
 
     // 根据左右手决定绕 z 轴旋转的角度
-    double angle = is_right_hand ? -M_PI / 2 : M_PI / 2;
+    double angle = is_right_hand ? M_PI / 2 : -M_PI / 2;
     AngleAxisd rotation_vector(angle, Vector3d::UnitZ());
     Quaterniond z_rotation(rotation_vector);
 
